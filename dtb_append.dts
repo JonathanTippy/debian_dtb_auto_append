@@ -1,0 +1,16 @@
+/ {
+	serial@ff180000 {
+		bluetooth {
+			compatible = "brcm,bcm4345c5";
+			max-speed = <1500000>;
+		};
+	};
+
+	spdif@ff870000 {
+		status = "okay";
+	};
+
+	i2s@ff880000  {
+		status = "disabled";
+	};
+};
