@@ -1,10 +1,11 @@
 #!/bin/bash
 
 ####	Exit immediately if anything fails
-
 set -e
-
-OG_DTB_FILE="/boot/dtbs/$(uname -r)/rockchip/rk3399-rockpro64.dtb"
+KERNEL_NAME=$(uname -r)
+KERNEL_PACKAGE_NAME=$(dpkg -l | grep '^ii' | grep $(uname -r) | awk '{print $2}')
+OG_DTB_FILE="/usr/lib/$KERNEL_PACKAGE_NAME/rockchip/rk3399-rockpro64.dtb"
+PREV_DTB_FILE="/boot/dtbs/$KERNEL_NAME/rockchip/rk3399-rockpro64.dtb"
 WORK_DIR="/boot/dtbs/dtb-workspace"
 trap 'echo "deleting workspace directory"; rm -rf "$WORK_DIR"' EXIT
 APPENDABLES_DIR="/boot/dtbs/appendables"
@@ -45,9 +46,13 @@ echo "edited dtb successfully compiled"
 
 ####	apply the new dtb if anything has changed
 
-if ! cmp -s "${OG_DTB_FILE}" "$WORK_DIR/merged.dtb"; then
+if ! cmp -s "${PREV_DTB_FILE}" "$WORK_DIR/merged.dtb"; then
   echo "changes found, writing new dtb"
+  cp "${OG_DTB_FILE}" "$WORK_DIR/og_file.dtb"
   cp "$WORK_DIR/merged.dtb" "${OG_DTB_FILE}"
+  echo "updating kernel"
+  sudo update-initramfs -u -k all
+  cp "$WORK_DIR/og_file.dtb" "${OG_DTB_FILE}"
 else
   echo "no changes, not writing new dtb"
 fi
